@@ -1,0 +1,13 @@
+# 工程内部数据（不随仓库分发）
+.workbuddy/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# 临时文件
+*.log
+*.tmp

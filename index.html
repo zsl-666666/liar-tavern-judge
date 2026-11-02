@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>骗子酒馆 · 裁定台</title>
+<style>
+:root{
+  --gold:#d9b382;
+  --gold-dim:#8d7250;
+  --gold-hi:#f4d7a6;
+  --text:#f2e7d4;
+  --text-dim:#c6b69c;
+  --text-faint:#9d8b72;
+  --line:rgba(217,179,130,.15);
+  --ink:#2e2419;
+  --red:#9d2b25;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:#0a0706;color:var(--text);
+  font-family:"Noto Serif SC","Source Han Serif SC","Songti SC",STSong,SimSun,Georgia,serif;
+  overflow:hidden;-webkit-font-smoothing:antialiased;
+  user-select:none;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+/* ================= 背景 ================= */
+.bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(1000px 620px at 50% 48%, rgba(184,112,60,.09), transparent 70%),
+    radial-gradient(1100px 640px at 50% -14%, rgba(217,179,130,.14), transparent 62%),
+    radial-gradient(900px 560px at 50% 114%, rgba(168,51,44,.10), transparent 62%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.013) 0 2px, transparent 2px 9px),
+    linear-gradient(#17100c,#0a0706 58%,#120c09);
+}
+.bg::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 42%, transparent 48%, rgba(0,0,0,.45) 100%);
+}
+.lamp{
+  position:fixed;left:50%;top:-150px;width:700px;height:460px;z-index:0;
+  transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(ellipse at 50% 30%, rgba(255,196,120,.15), transparent 66%);
+  animation:flicker 7s ease-in-out infinite;
+}
+@keyframes flicker{
+  0%,100%{opacity:.85} 22%{opacity:.6} 26%{opacity:.92}
+  48%{opacity:.7} 52%{opacity:.95} 74%{opacity:.64}
+}
+
+/* ================= 布局 ================= */
+.app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+
+/* ---- 顶栏 ---- */
+header{
+  flex-shrink:0;
+  display:flex;align-items:center;gap:16px;
+  padding:12px 22px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(28,19,14,.94), rgba(20,13,10,.5));
+}
+.brand{display:flex;align-items:center;gap:10px;font-size:18px;letter-spacing:.2em;color:var(--gold-hi)}
+.brand .mark{
+  width:26px;height:26px;display:grid;place-items:center;font-size:14px;
+  border:1px solid var(--gold-dim);border-radius:50%;color:var(--gold);
+  box-shadow:inset 0 0 10px rgba(217,179,130,.2);
+}
+.brand .sub{
+  font-size:10.5px;letter-spacing:.4em;color:var(--text-dim);
+  padding-left:12px;margin-left:4px;border-left:1px solid var(--line);opacity:.8;
+}
+.counters{margin-left:auto;display:flex;gap:8px}
+.count{
+  display:flex;align-items:baseline;gap:6px;
+  padding:5px 13px;border-radius:7px;
+  background:rgba(0,0,0,.3);border:1px solid var(--line);
+  font-size:11px;letter-spacing:.12em;color:var(--text-faint);
+}
+.count b{font-size:15px;color:var(--gold-hi);font-weight:400;letter-spacing:0}
+.count.boom.hot b{color:#e2695e}
+.icon-btn{
+  width:34px;height:34px;border-radius:8px;font-size:14px;
+  border:1px solid var(--line);background:rgba(0,0,0,.3);transition:.2s;
+}
+.icon-btn:hover{border-color:var(--gold-dim);background:rgba(217,179,130,.1)}
+.icon-btn.off{opacity:.4}
+
+/* ---- 主区 ---- */
+main{
+  flex:1;min-height:0;
+  display:grid;grid-template-columns:1fr 1fr;
+}
+.panel{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:18px 26px;gap:0;min-height:0;position:relative;
+}
+.panel.right{border-left:none}
+.panel.right::after{
+  content:"";position:absolute;left:0;top:13%;bottom:13%;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(217,179,130,.26) 22%,rgba(217,179,130,.26) 78%,transparent);
+}
+.panel.right::before{
+  content:"";position:absolute;left:-4px;top:50%;width:9px;height:9px;z-index:2;
+  background:linear-gradient(135deg,#f0cf9b,#8d7250);
+  transform:translateY(-50%) rotate(45deg);
+  box-shadow:0 0 16px rgba(240,207,155,.7);
+}
+
+.ptitle{
+  font-size:11px;letter-spacing:.4em;color:var(--text-faint);
+  text-indent:.4em;margin-bottom:14px;
+}
+.ptitle.gap{margin-top:30px}
+
+/* ---- 底牌 ---- */
+.card-wrap{perspective:900px}
+.big-card{
+  width:clamp(112px,10.6vw,152px);
+  aspect-ratio:152/214;height:auto;
+  border-radius:10px;position:relative;
+  background:linear-gradient(158deg,#fdf6e7,#f3e6cd 55%,#e9d7b4);
+  border:1px solid #cbb68f;
+  box-shadow:
+    0 12px 34px rgba(0,0,0,.6),
+    0 0 50px rgba(217,179,130,.12),
+    inset 0 0 0 5px rgba(255,255,255,.5),
+    inset 0 0 0 6px rgba(180,150,100,.2);
+  display:grid;place-items:center;
+  transition:transform .18s;
+}
+.big-card.blank{
+  background:linear-gradient(158deg,#332318,#150e0a);
+  border-color:rgba(217,179,130,.22);
+  box-shadow:0 12px 34px rgba(0,0,0,.6), inset 0 0 50px rgba(0,0,0,.5);
+}
+.big-card.blank::after{
+  content:"";position:absolute;inset:13px;border:1px dashed rgba(217,179,130,.22);border-radius:5px;
+}
+.big-card.blank .rank{opacity:.14;color:#e8c48b}
+.big-card.blank .corner,.big-card.blank .pip{opacity:0}
+.big-card .rank{
+  font-family:Georgia,"Times New Roman",serif;font-weight:700;
+  font-size:clamp(66px,6.6vw,94px);line-height:1;
+}
+.big-card.red .rank{color:var(--red)}
+.big-card.dark .rank{color:var(--ink)}
+.big-card .corner{
+  position:absolute;font-family:Georgia,serif;font-size:clamp(14px,1.4vw,20px);font-weight:700;line-height:1;
+}
+.big-card .corner.tl{top:11px;left:13px}
+.big-card .corner.br{bottom:11px;right:13px;transform:rotate(180deg)}
+.big-card.red .corner{color:var(--red)}
+.big-card.dark .corner{color:var(--ink)}
+.big-card .pip{
+  position:absolute;font-size:12px;opacity:.34;color:#9b7a4e;
+}
+.big-card .pip.a{top:40px;left:14px}
+.big-card .pip.b{bottom:40px;right:14px;transform:rotate(180deg)}
+
+.big-card.rolling{animation:rollShake .14s linear infinite}
+@keyframes rollShake{
+  0%,100%{transform:translate(0,0) rotate(-.4deg)}
+  50%{transform:translate(1px,-1px) rotate(.5deg)}
+}
+.big-card.landed{animation:land .46s cubic-bezier(.2,1.5,.4,1)}
+@keyframes land{
+  0%{transform:scale(1.13)}
+  62%{transform:scale(.975)}
+  100%{transform:scale(1)}
+}
+
+.card-hint{
+  margin-top:14px;min-height:18px;
+  font-size:12px;letter-spacing:.12em;color:var(--text-faint);
+  text-align:center;transition:.25s;
+}
+.card-hint.on{color:var(--gold)}
+
+/* ---- 座位 ---- */
+.seats{display:flex;gap:clamp(9px,2.1vw,22px);margin-top:2px;flex-wrap:wrap;justify-content:center}
+.pseat{display:flex;flex-direction:column;align-items:center;gap:8px}
+.disc{
+  width:clamp(44px,4.5vw,62px);
+  height:clamp(44px,4.5vw,62px);
+  border-radius:50%;
+  display:grid;place-items:center;
+  font-family:Georgia,serif;font-size:clamp(17px,1.9vw,25px);
+  color:var(--text-faint);
+  border:1px solid rgba(217,179,130,.26);
+  background:radial-gradient(circle at 34% 28%, #3d2921, #120c09 78%);
+  box-shadow:inset 0 0 16px rgba(0,0,0,.7);
+  transition:.16s;
+}
+.pseat.pick .disc{
+  color:var(--gold-hi);border-color:rgba(240,207,155,.8);
+  box-shadow:0 0 0 2px rgba(240,207,155,.18), 0 0 24px rgba(217,179,130,.5), inset 0 0 16px rgba(0,0,0,.6);
+  transform:scale(1.07);
+}
+.pseat.winner .disc{
+  color:#fff1d4;
+  background:radial-gradient(circle at 34% 28%, #7a5432, #2a190f 78%);
+  border-color:var(--gold-hi);
+  box-shadow:0 0 0 3px rgba(240,207,155,.16), 0 0 40px rgba(240,207,155,.6), inset 0 0 18px rgba(0,0,0,.5);
+  animation:winnerPop .52s cubic-bezier(.2,1.6,.4,1);
+}
+@keyframes winnerPop{
+  0%{transform:scale(1.28)}
+  60%{transform:scale(.96)}
+  100%{transform:scale(1)}
+}
+.pseat .nm{font-size:11.5px;letter-spacing:.1em;color:var(--text-faint);transition:.16s}
+.pseat.winner .nm{color:var(--gold-hi)}
+
+/* ---- 按钮 ---- */
+.deal-btn{
+  margin-top:32px;
+  padding:15px 50px;border-radius:3px;
+  font-size:15px;letter-spacing:.36em;text-indent:.36em;
+  color:#22160a;font-weight:600;
+  background:linear-gradient(180deg, rgba(240,207,155,.98), rgba(186,146,84,.98));
+  border:1px solid #f4dcb4;
+  box-shadow:0 8px 26px rgba(217,179,130,.28);
+  transition:.2s;
+}
+.deal-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 34px rgba(217,179,130,.42)}
+.deal-btn:active:not(:disabled){transform:translateY(0) scale(.985)}
+.deal-btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---- 轮盘 ---- */
+.gun-body{display:flex;flex-direction:column;align-items:center;width:100%}
+.gun-side{display:flex;flex-direction:column;align-items:center;width:100%}
+.cylinder{
+  width:clamp(168px,16.2vw,232px);
+  height:clamp(168px,16.2vw,232px);
+  display:block;
+  filter:drop-shadow(0 18px 38px rgba(0,0,0,.85));
+}
+.cyl-g{transform-origin:110px 110px;transition:transform 1.45s cubic-bezier(.15,.72,.2,1)}
+.chamber{fill:#141110;stroke:#3a352f;stroke-width:1.5;transition:fill .12s}
+.chamber.fired{fill:#8e1f18;stroke:#d4453b;filter:drop-shadow(0 0 10px rgba(212,69,59,.95))}
+.shake{animation:shakeGun .5s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes shakeGun{
+  10%,90%{transform:translateX(-2px)}
+  20%,80%{transform:translateX(4px)}
+  30%,50%,70%{transform:translateX(-9px)}
+  40%,60%{transform:translateX(9px)}
+}
+.gun-result{
+  margin-top:10px;min-height:56px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+}
+.gun-main{
+  font-size:17px;letter-spacing:.26em;text-indent:.26em;color:var(--text-faint);
+  transition:.3s;
+}
+.gun-sub{font-size:11.5px;letter-spacing:.1em;color:var(--text-faint);opacity:.75;transition:.3s}
+.gun-main.dead{color:#ef7d70;font-size:21px}
+.gun-main.alive{color:#9dc99d}
+.gun-main.dead + .gun-sub{color:#c98b83}
+.gun-main.alive + .gun-sub{color:#87ab87}
+
+.fire-btn{
+  margin-top:6px;
+  padding:15px 46px;border-radius:3px;
+  font-size:15px;letter-spacing:.32em;text-indent:.32em;
+  color:#f3d8cf;
+  background:linear-gradient(180deg, rgba(146,42,36,.95), rgba(92,24,20,.98));
+  border:1px solid rgba(212,69,59,.65);
+  box-shadow:0 8px 26px rgba(120,30,25,.35);
+  transition:.2s;
+}
+.fire-btn:hover:not(:disabled){
+  background:linear-gradient(180deg, rgba(176,52,44,.98), rgba(110,30,24,1));
+  transform:translateY(-2px);box-shadow:0 12px 34px rgba(160,40,32,.45);
+}
+.fire-btn:active:not(:disabled){transform:translateY(0) scale(.985)}
+.fire-btn:disabled{opacity:.45;cursor:not-allowed}
+
+.tip{
+  margin-top:34px;max-width:280px;text-align:center;
+  font-size:11.5px;line-height:2;letter-spacing:.08em;color:var(--text-faint);
+  border-top:1px solid var(--line);padding-top:18px;
+}
+.tip b{color:var(--gold);font-weight:400}
+
+/* ---- 记录条 ---- */
+footer{
+  flex-shrink:0;
+  border-top:1px solid var(--line);
+  background:linear-gradient(0deg, rgba(20,13,10,.96), rgba(16,10,8,.7));
+  padding:9px 22px 11px;
+}
+.log-head{
+  display:flex;align-items:center;gap:12px;margin-bottom:8px;
+  font-size:10px;letter-spacing:.34em;color:var(--text-faint);
+}
+.log-head .rate{margin-left:auto;letter-spacing:.1em;font-size:10.5px;color:var(--text-faint)}
+.log-head .rate b{color:var(--text-dim);font-weight:400}
+.log-head .rate.warn b{color:#e2695e}
+.clear-btn{
+  font-size:10.5px;letter-spacing:.16em;color:var(--text-faint);
+  padding:2px 9px;border:1px solid transparent;border-radius:10px;transition:.2s;
+}
+.clear-btn:hover{color:#e2695e;border-color:rgba(212,69,59,.35)}
+.log-scroll{
+  display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;
+  padding-bottom:3px;min-height:30px;scrollbar-width:thin;
+  scrollbar-color:rgba(217,179,130,.2) transparent;
+}
+.log-scroll::-webkit-scrollbar{height:4px}
+.log-scroll::-webkit-scrollbar-thumb{background:rgba(217,179,130,.2);border-radius:2px}
+.chip{
+  flex-shrink:0;white-space:nowrap;
+  padding:6px 13px;border-radius:15px;
+  font-size:11.5px;letter-spacing:.06em;
+  color:var(--text-dim);
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.3);
+  animation:chipIn .35s cubic-bezier(.2,1.2,.4,1) both;
+}
+@keyframes chipIn{from{opacity:0;transform:translateX(12px) scale(.94)}to{opacity:1;transform:none}}
+.chip.round{color:var(--gold-hi);border-color:rgba(217,179,130,.35);background:rgba(217,179,130,.07)}
+.chip.round b{color:#fff0d4;font-weight:600}
+.chip.safe{color:#9dc99d;border-color:rgba(120,190,120,.3);background:rgba(120,190,120,.06)}
+.chip.boom{color:#ef8478;border-color:rgba(212,69,59,.45);background:rgba(140,40,34,.16)}
+.chip .empty{color:var(--text-faint)}
+
+/* ---- 红闪 ---- */
+.flash{
+  position:fixed;inset:0;z-index:80;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at 50% 50%, rgba(255,70,45,.45), rgba(120,10,6,.85));
+}
+.flash.go{animation:flashGo .5s ease-out}
+@keyframes flashGo{0%{opacity:0}8%{opacity:1}100%{opacity:0}}
+
+/* ================= 开枪前的压迫感 ================= */
+.spot{
+  position:fixed;inset:0;z-index:70;pointer-events:none;
+  opacity:0;transition:opacity .62s ease;
+  background:radial-gradient(circle 232px at var(--sx,73%) var(--sy,47%),
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,.34) 42%,
+    rgba(0,0,0,.82) 76%,
+    rgba(0,0,0,.95) 100%);
+}
+body.tension .spot{opacity:1}
+
+.pulse{
+  position:fixed;inset:0;z-index:74;pointer-events:none;opacity:0;
+  box-shadow:inset 0 0 130px 26px rgba(168,26,20,.66);
+}
+body.tension .pulse{animation:heartHit 1.18s ease-in-out infinite}
+@keyframes heartHit{
+  0%{opacity:.1}
+  7%{opacity:.66}
+  18%{opacity:.18}
+  30%{opacity:.5}
+  46%{opacity:.14}
+  100%{opacity:.1}
+}
+
+body.tension .cylinder{
+  filter:brightness(1.1) drop-shadow(0 20px 40px rgba(0,0,0,.92)) drop-shadow(0 0 32px rgba(217,179,130,.3));
+  transform:scale(1.055);
+  transition:transform .7s cubic-bezier(.3,.8,.3,1), filter .7s ease;
+}
+body.tension .gun-main{
+  color:#f0cfa8;
+  animation:breathe 1.18s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{opacity:.62}50%{opacity:1}}
+
+body.tension .fire-btn{
+  background:linear-gradient(180deg, rgba(184,42,34,.98), rgba(112,20,16,1));
+  border-color:rgba(255,96,80,.9);
+  box-shadow:0 0 0 1px rgba(255,90,70,.3), 0 0 36px rgba(200,40,30,.62);
+  letter-spacing:.2em;text-indent:.2em;
+}
+
+/* ================= 响应式 ================= */
+@media (max-width:880px){
+  body{overflow-x:hidden;overflow-y:auto}
+  /* 手机上轮盘在下方、视野窄，聚光要放软，否则整屏糊成黑的 */
+  .spot{
+    background:radial-gradient(circle 196px at var(--sx,58%) var(--sy,72%),
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,.18) 45%,
+      rgba(0,0,0,.62) 80%,
+      rgba(0,0,0,.84) 100%);
+  }
+  .pulse{box-shadow:inset 0 0 76px 12px rgba(168,26,20,.42)}
+  body.tension .cylinder{transform:scale(1.03)}
+  .app{height:auto;min-height:100%}
+  header{padding:9px 12px;gap:8px;flex-wrap:nowrap}
+  .brand{font-size:14px;letter-spacing:.06em;gap:7px;flex-shrink:0}
+  .brand .mark{width:22px;height:22px;font-size:12px}
+  .brand .sub{display:none}
+  .counters{margin-left:auto;gap:5px}
+  .count{padding:3px 8px;font-size:9px;gap:3px;letter-spacing:.06em}
+  .count b{font-size:12px}
+  .icon-btn{width:28px;height:28px;font-size:12px;flex-shrink:0}
+  main{grid-template-columns:1fr}
+  .panel{padding:18px 16px 20px;min-height:0}
+  .panel.right{border-left:none;border-top:1px solid var(--line)}
+  .panel.right::after{display:none}
+  .panel.right::before{left:50%;top:-5px;transform:translateX(-50%) rotate(45deg)}
+  .ptitle{margin-bottom:10px}
+  .ptitle.gap{margin-top:18px}
+  .card-hint{margin-top:10px}
+  .deal-btn{margin-top:18px;padding:13px 42px}
+  .gun-result{min-height:44px;margin-top:6px}
+  .fire-btn{margin-top:4px;padding:13px 40px}
+  .gun-body{flex-direction:row;justify-content:center;align-items:center;gap:16px}
+  .gun-side{width:auto}
+  .gun-sub{display:none}
+  .tip{display:none}
+  footer{position:sticky;bottom:0;z-index:20;backdrop-filter:blur(10px)}
+  .big-card{width:130px}
+  .big-card .rank{font-size:82px}
+  .disc{width:56px;height:56px;font-size:22px}
+  .seats{gap:18px}
+  .cylinder{width:206px;height:206px}
+  footer{padding:8px 12px 10px}
+}
+@media (max-width:420px){
+  .big-card{width:112px}
+  .big-card .rank{font-size:70px}
+  .big-card .corner{font-size:15px}
+  .disc{width:50px;height:50px;font-size:20px}
+  .seats{gap:14px}
+  .cylinder{width:180px;height:180px}
+  .deal-btn,.fire-btn{padding:13px 36px;font-size:14px}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="lamp"></div>
+<div class="flash" id="flash"></div>
+<div class="spot" id="spot"></div>
+<div class="pulse" id="pulse"></div>
+
+<div class="app">
+  <header>
+    <div class="brand"><span class="mark">♠</span>骗子酒馆<span class="sub">裁 定 台</span></div>
+    <div class="counters">
+      <div class="count">局 <b id="cRounds">0</b></div>
+      <div class="count">枪 <b id="cShots">0</b></div>
+      <div class="count boom">倒下 <b id="cDeaths">0</b></div>
+    </div>
+    <button class="icon-btn" id="soundBtn" title="音效">🔊</button>
+  </header>
+
+  <main>
+    <!-- 左：底牌 + 先手 -->
+    <section class="panel left">
+      <div class="ptitle">本 局 底 牌</div>
+      <div class="card-wrap">
+        <div class="big-card blank" id="bigCard">
+          <span class="pip a">◆</span>
+          <span class="corner tl" id="cTL"></span>
+          <span class="rank" id="cardRank">?</span>
+          <span class="corner br" id="cBR"></span>
+          <span class="pip b">◆</span>
+        </div>
+      </div>
+      <div class="card-hint" id="cardHint">点下方按钮，翻出本局底牌</div>
+
+      <div class="ptitle gap">谁 先 出 牌</div>
+      <div class="seats" id="seats">
+        <div class="pseat" data-i="0"><div class="disc">1</div><div class="nm">1 号</div></div>
+        <div class="pseat" data-i="1"><div class="disc">2</div><div class="nm">2 号</div></div>
+        <div class="pseat" data-i="2"><div class="disc">3</div><div class="nm">3 号</div></div>
+        <div class="pseat" data-i="3"><div class="disc">4</div><div class="nm">4 号</div></div>
+      </div>
+
+      <button class="deal-btn" id="dealBtn">开 新 一 局</button>
+    </section>
+
+    <!-- 右：轮盘 -->
+    <section class="panel right">
+      <div class="ptitle">生 死 轮 盘</div>
+      <div class="gun-body">
+        <svg class="cylinder" viewBox="0 0 220 220">
+          <defs>
+            <radialGradient id="metalG" cx="38%" cy="26%">
+              <stop offset="0%" stop-color="#7d776c"/>
+              <stop offset="40%" stop-color="#464239"/>
+              <stop offset="100%" stop-color="#151312"/>
+            </radialGradient>
+          </defs>
+
+          <circle cx="110" cy="110" r="104" fill="#0d0b0a"/>
+          <circle cx="110" cy="110" r="98" fill="url(#metalG)" stroke="#0a0908" stroke-width="2"/>
+
+          <!-- 齿痕 · 五等分 -->
+          <g stroke="#0a0908" stroke-width="3.5" opacity=".62" stroke-linecap="round">
+            <line x1="166" y1="32" x2="159" y2="42"/>
+            <line x1="201" y1="140" x2="190" y2="136"/>
+            <line x1="110" y1="206" x2="110" y2="194"/>
+            <line x1="19" y1="140" x2="30" y2="136"/>
+            <line x1="54" y1="32" x2="61" y2="42"/>
+          </g>
+
+          <circle cx="110" cy="110" r="82" fill="none" stroke="#0c0b0a" stroke-width="1.5" opacity=".55"/>
+
+          <g class="cyl-g" id="cylG">
+            <circle class="chamber" data-k="0" cx="110" cy="50" r="19"/>
+            <circle class="chamber" data-k="1" cx="167" cy="91" r="19"/>
+            <circle class="chamber" data-k="2" cx="145" cy="159" r="19"/>
+            <circle class="chamber" data-k="3" cx="75" cy="159" r="19"/>
+            <circle class="chamber" data-k="4" cx="53" cy="91" r="19"/>
+          </g>
+
+          <circle cx="110" cy="110" r="15" fill="#2b2825" stroke="#0a0908" stroke-width="1.5"/>
+          <circle cx="110" cy="110" r="4.5" fill="#080807"/>
+          <polygon points="110,3 99,27 121,27" fill="#c9a227" opacity=".95"/>
+        </svg>
+
+        <div class="gun-side">
+          <div class="gun-result">
+            <div class="gun-main" id="gunMain">五膛 · 一弹</div>
+            <div class="gun-sub" id="gunSub">五分之一，谁也不知道是哪一膛</div>
+          </div>
+          <button class="fire-btn" id="fireBtn">扣 扳 机</button>
+        </div>
+      </div>
+
+      <div class="tip">
+        开牌后输的那个扣扳机。<br />
+        <b>命中就出局</b>，空膛就继续，枪递给下一个人。
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="log-head">
+      <span>记 录</span>
+      <button class="clear-btn" id="clearBtn">重 置</button>
+      <span class="rate" id="rate">—</span>
+    </div>
+    <div class="log-scroll" id="log">
+      <span class="chip"><span class="empty">还没有记录</span></span>
+    </div>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const rnd = n => Math.floor(Math.random() * n);
+const pick = a => a[rnd(a.length)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const RANKS = ["J", "Q", "K", "A"];
+const CHAMBERS = 5;            // 五膛弹巢，只装一发 —— 五分之一死亡率
+const STEP = 360 / CHAMBERS;   // 每膛间隔 72°
+const RATE_TEXT = (100 / CHAMBERS).toFixed(1) + "%";
+const STORE_KEY = "liar-tavern-judge";
+
+let busy = false;
+let soundOn = true;
+let heartTimer = null;
+
+/* ================= 音效 ================= */
+let actx = null;
+function audio() {
+  if (!actx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) actx = new AC();
+  }
+  if (actx && actx.state === "suspended") actx.resume();
+  return actx;
+}
+function tone({ f = 440, to = null, dur = 0.09, type = "sine", vol = 0.05 }) {
+  if (!soundOn) return;
+  const ctx = audio(); if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.value = f;
+  if (to) o.frequency.exponentialRampToValueAtTime(to, ctx.currentTime + dur);
+  g.gain.value = vol;
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(); o.stop(ctx.currentTime + dur + 0.02);
+}
+function noise({ dur = 0.25, vol = 0.2, f0 = 1800, f1 = 200 } = {}) {
+  if (!soundOn) return;
+  const ctx = audio(); if (!ctx) return;
+  const len = Math.floor(ctx.sampleRate * dur);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.4);
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const flt = ctx.createBiquadFilter(); flt.type = "lowpass";
+  flt.frequency.setValueAtTime(f0, ctx.currentTime);
+  flt.frequency.exponentialRampToValueAtTime(f1, ctx.currentTime + dur);
+  const g = ctx.createGain(); g.gain.value = vol;
+  src.connect(flt); flt.connect(g); g.connect(ctx.destination);
+  src.start();
+}
+const sfx = {
+  tick: () => tone({ f: 1700, dur: 0.022, type: "square", vol: 0.022 }),
+  shuffle: () => tone({ f: 900, to: 520, dur: 0.05, type: "square", vol: 0.018 }),
+  land: () => { tone({ f: 660, dur: 0.14, type: "triangle", vol: 0.055 }); tone({ f: 990, dur: 0.2, type: "sine", vol: 0.04 }); },
+  pick: () => tone({ f: 780, to: 1040, dur: 0.1, type: "triangle", vol: 0.05 }),
+  click: () => tone({ f: 1500, dur: 0.028, type: "square", vol: 0.03 }),
+  bang: () => noise({ dur: 0.55, vol: 0.34, f0: 3400, f1: 80 }),
+  safe: () => tone({ f: 210, to: 120, dur: 0.22, type: "sine", vol: 0.06 }),
+  // 心跳：一下重、一下轻
+  heart: () => {
+    tone({ f: 66, to: 42, dur: 0.17, type: "sine", vol: 0.16 });
+    setTimeout(() => tone({ f: 57, to: 36, dur: 0.22, type: "sine", vol: 0.1 }), 172);
+  },
+  // 棘轮扣齿：金属一点
+  clack: () => {
+    tone({ f: 1240, dur: 0.026, type: "square", vol: 0.05 });
+    noise({ dur: 0.05, vol: 0.045, f0: 2900, f1: 700 });
+  }
+};
+
+/* ================= 状态 ================= */
+const state = { rounds: 0, shots: 0, deaths: 0, log: [], lastRank: null, lastFirst: -1 };
+
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    state.rounds = d.rounds || 0;
+    state.shots = d.shots || 0;
+    state.deaths = d.deaths || 0;
+    state.log = Array.isArray(d.log) ? d.log : [];
+    state.lastRank = d.lastRank || null;
+    state.lastFirst = typeof d.lastFirst === "number" ? d.lastFirst : -1;
+  } catch (e) {}
+}
+
+/* ================= 渲染 ================= */
+function renderCounters() {
+  $("cRounds").textContent = state.rounds;
+  $("cShots").textContent = state.shots;
+  $("cDeaths").textContent = state.deaths;
+  document.querySelector(".count.boom").classList.toggle("hot", state.deaths > 0);
+
+  const rate = $("rate");
+  if (state.shots === 0) {
+    rate.innerHTML = "理论死亡率 <b>" + RATE_TEXT + "</b>";
+    rate.classList.remove("warn");
+  } else {
+    const pct = (state.deaths / state.shots * 100).toFixed(1);
+    rate.innerHTML = `实测 <b>${state.deaths}/${state.shots}</b> · <b>${pct}%</b>　理论 ${RATE_TEXT}`;
+    rate.classList.toggle("warn", state.shots >= 4 && state.deaths / state.shots > 0.34);
+  }
+}
+
+function renderLog() {
+  const box = $("log");
+  box.innerHTML = "";
+  if (!state.log.length) {
+    box.innerHTML = '<span class="chip"><span class="empty">还没有记录</span></span>';
+    return;
+  }
+  state.log.forEach(item => {
+    const el = document.createElement("span");
+    el.className = "chip " + (item.t || "");
+    el.innerHTML = item.h;
+    box.appendChild(el);
+  });
+  box.scrollLeft = box.scrollWidth;
+}
+
+function addLog(type, html) {
+  state.log.push({ t: type, h: html });
+  if (state.log.length > 80) state.log.shift();
+  save();
+  renderLog();
+}
+
+/* ================= 底牌 ================= */
+const RANK_COLOR = { J: "dark", Q: "red", K: "dark", A: "red" };
+
+function setCardFace(rank, blank) {
+  const card = $("bigCard");
+  if (blank) {
+    card.className = "big-card blank";
+    $("cardRank").textContent = "?";
+    $("cTL").textContent = "";
+    $("cBR").textContent = "";
+    return;
+  }
+  card.className = "big-card " + RANK_COLOR[rank];
+  $("cardRank").textContent = rank;
+  $("cTL").textContent = rank;
+  $("cBR").textContent = rank;
+}
+
+async function rollCard(finalRank) {
+  const card = $("bigCard");
+  card.classList.add("rolling");
+  const n = 13;
+  for (let i = 0; i < n; i++) {
+    setCardFace(pick(RANKS));
+    sfx.shuffle();
+    await sleep(52 + i * 7);
+  }
+  card.classList.remove("rolling");
+  setCardFace(finalRank);
+  card.classList.add("landed");
+  sfx.land();
+  setTimeout(() => card.classList.remove("landed"), 520);
+}
+
+/* ================= 先手 ================= */
+const seatEls = Array.prototype.slice.call(document.querySelectorAll(".pseat"));
+
+function clearSeats() {
+  seatEls.forEach(s => s.classList.remove("pick", "winner"));
+}
+
+async function spinSeats(target) {
+  clearSeats();
+  const steps = 17 + target;      // 最后一次高亮正好落在 target
+  for (let i = 0; i < steps; i++) {
+    const idx = i % 4;
+    seatEls.forEach((s, k) => s.classList.toggle("pick", k === idx));
+    sfx.tick();
+    const p = i / steps;
+    await sleep(46 + p * p * 250);
+  }
+  clearSeats();
+  seatEls[target].classList.add("winner");
+  sfx.pick();
+}
+
+/* ================= 开新一局 ================= */
+function cardSafeReset() {
+  $("bigCard").classList.remove("landed", "rolling");
+}
+
+async function newRound() {
+  if (busy) return;
+  busy = true;
+  $("dealBtn").disabled = true;
+  $("fireBtn").disabled = true;
+
+  const rank = pick(RANKS);
+  const firstIdx = rnd(4);
+
+  const hint = $("cardHint");
+  hint.classList.remove("on");
+  hint.textContent = "洗 牌 …";
+  clearSeats();
+  setCardFace(rank, true);
+  cardSafeReset();
+
+  await sleep(180);
+  await rollCard(rank);
+
+  hint.textContent = "本局要出的就是 " + rank;
+  hint.classList.add("on");
+  await sleep(160);
+
+  await spinSeats(firstIdx);
+
+  state.rounds++;
+  state.lastRank = rank;
+  state.lastFirst = firstIdx;
+  save();
+  renderCounters();
+  addLog("round", "第 " + state.rounds + " 局 · 底牌 <b>" + rank + "</b> · <b>" + (firstIdx + 1) + " 号</b>先出");
+
+  busy = false;
+  $("dealBtn").disabled = false;
+  $("fireBtn").disabled = false;
+}
+
+/* ================= 扣扳机 ================= */
+/* ---- 压迫感：心跳 + 聚光 ---- */
+function startHeart() {
+  stopHeart();
+  sfx.heart();
+  heartTimer = setInterval(() => sfx.heart(), 1180);
+}
+function stopHeart() {
+  if (heartTimer) { clearInterval(heartTimer); heartTimer = null; }
+}
+function aimSpot() {
+  const el = document.querySelector(".cylinder");
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const sx = (r.left + r.width / 2) / window.innerWidth * 100;
+  const sy = (r.top + r.height / 2) / window.innerHeight * 100;
+  document.documentElement.style.setProperty("--sx", sx.toFixed(1) + "%");
+  document.documentElement.style.setProperty("--sy", sy.toFixed(1) + "%");
+}
+
+async function fire() {
+  if (busy) return;
+  busy = true;
+
+  const fireBtn = $("fireBtn");
+  const dealBtn = $("dealBtn");
+  fireBtn.disabled = true;
+  dealBtn.disabled = true;
+
+  // 先定生死：五膛一弹
+  const dead = Math.random() < 1 / CHAMBERS;
+  const k = rnd(CHAMBERS);                     // 转停后停在指针下的膛
+
+  const cyl = $("cylG");
+  const main = $("gunMain");
+  const sub = $("gunSub");
+
+  Array.prototype.forEach.call(cyl.querySelectorAll(".chamber"), c => c.classList.remove("fired"));
+
+  /* ---- 第一幕：屏息 ---- */
+  main.className = "gun-main";
+  main.textContent = "屏 住 呼 吸 …";
+  sub.textContent = "五膛里，只有一膛有子弹";
+  fireBtn.textContent = "手 别 抖";
+
+  aimSpot();
+  document.body.classList.add("tension");
+  startHeart();
+  await sleep(1420);
+
+  /* ---- 第二幕：转巢，棘轮声由急到缓 ---- */
+  main.textContent = "转 弹 巢 …";
+  const turns = 3 + rnd(2);
+  const angle = turns * 360 + ((360 - STEP * k) % 360);
+
+  cyl.style.transition = "none";
+  cyl.style.transform = "rotate(0deg)";
+  void cyl.getBoundingClientRect();
+  cyl.style.transition = "transform 1.95s cubic-bezier(.16,.68,.1,1)";
+  cyl.style.transform = "rotate(" + angle + "deg)";
+
+  let acc = 0;
+  for (let i = 0; i < 8; i++) {
+    acc += 55 * Math.pow(1.4, i);              // 55 → 581ms，越来越慢
+    setTimeout(() => sfx.clack(), acc);
+  }
+
+  await sleep(1960);
+
+  /* ---- 第三幕：死寂，心跳也停了 ---- */
+  stopHeart();
+  await sleep(520);
+
+  /* ---- 第四幕：揭晓 ---- */
+  const top = cyl.querySelector('.chamber[data-k="' + k + '"]');
+  document.body.classList.remove("tension");
+  fireBtn.textContent = "扣 扳 机";
+
+  if (dead) {
+    if (top) top.classList.add("fired");
+    const flash = $("flash");
+    flash.classList.remove("go");
+    void flash.offsetWidth;
+    flash.classList.add("go");
+    sfx.bang();
+    document.querySelector(".cylinder").animate(
+      [{ transform: "scale(1.05)" }, { transform: "scale(1.12)" }, { transform: "scale(1)" }],
+      { duration: 380, easing: "ease-out" }
+    );
+    main.textContent = "砰 —— 出 局";
+    main.className = "gun-main dead";
+    sub.textContent = "酒馆少了一个人，换下一位";
+    state.deaths++;
+  } else {
+    sfx.safe();
+    // 劫后余生的一口凉气
+    document.querySelector(".cylinder").animate(
+      [{ filter: "brightness(1.32)" }, { filter: "brightness(1)" }],
+      { duration: 520, easing: "ease-out" }
+    );
+    main.textContent = "咔 哒 —— 空 膛";
+    main.className = "gun-main alive";
+    sub.textContent = "活下来了，把枪递给下一个人";
+  }
+
+  state.shots++;
+  save();
+  renderCounters();
+  addLog(dead ? "boom" : "safe", "第 " + state.shots + " 枪 · " + (dead ? "砰，出局" : "空膛"));
+
+  await sleep(420);
+  busy = false;
+  fireBtn.disabled = false;
+  dealBtn.disabled = false;
+}
+
+/* ================= 重置 ================= */
+function resetAll() {
+  if (busy) return;
+  stopHeart();
+  document.body.classList.remove("tension");
+  $("fireBtn").textContent = "扣 扳 机";
+  state.rounds = 0;
+  state.shots = 0;
+  state.deaths = 0;
+  state.log = [];
+  state.lastRank = null;
+  state.lastFirst = -1;
+  save();
+  renderCounters();
+  renderLog();
+  setCardFace(null, true);
+  clearSeats();
+  $("cardHint").classList.remove("on");
+  $("cardHint").textContent = "点下方按钮，翻出本局底牌";
+  $("gunMain").className = "gun-main";
+  $("gunMain").textContent = "五膛 · 一弹";
+  $("gunSub").textContent = "五分之一，谁也不知道是哪一膛";
+  Array.prototype.forEach.call(document.querySelectorAll(".chamber"), c => c.classList.remove("fired"));
+}
+
+/* ================= 事件 ================= */
+$("dealBtn").addEventListener("click", () => { audio(); newRound(); });
+$("fireBtn").addEventListener("click", () => { audio(); fire(); });
+$("clearBtn").addEventListener("click", resetAll);
+$("soundBtn").addEventListener("click", () => {
+  soundOn = !soundOn;
+  $("soundBtn").textContent = soundOn ? "🔊" : "🔇";
+  $("soundBtn").classList.toggle("off", !soundOn);
+});
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space") { e.preventDefault(); audio(); newRound(); }
+  if (e.code === "Enter") { e.preventDefault(); audio(); fire(); }
+});
+
+/* ================= 启动 ================= */
+function restoreLast() {
+  if (state.lastRank) {
+    setCardFace(state.lastRank);
+    $("cardHint").textContent = "本局要出的就是 " + state.lastRank;
+    $("cardHint").classList.add("on");
+  }
+  if (state.lastFirst >= 0 && seatEls[state.lastFirst]) {
+    seatEls[state.lastFirst].classList.add("winner");
+  }
+}
+
+load();
+setCardFace(null, true);
+renderCounters();
+renderLog();
+restoreLast();
+</script>
+</body>
+</html>
